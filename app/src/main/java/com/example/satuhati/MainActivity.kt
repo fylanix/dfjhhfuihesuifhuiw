@@ -31,6 +31,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.compose.rememberNavController
 import com.example.satuhati.domain.model.UserRole
 import com.example.satuhati.presentation.auth.AuthViewModel
+import com.example.satuhati.presentation.learning.LearningViewModel
 import com.example.satuhati.presentation.navigation.SatuHatiNavGraph
 import com.example.satuhati.presentation.navigation.Screen
 import com.example.satuhati.presentation.notes.NotesViewModel
@@ -49,6 +50,7 @@ class MainActivity : ComponentActivity() {
         val app = application as SatuHatiApp
         val authRepository = app.container.authRepository
         val noteRepository = app.container.noteRepository
+        val learningRepository = app.container.learningRepository
 
         setContent {
             SatuHatiTheme {
@@ -58,6 +60,9 @@ class MainActivity : ComponentActivity() {
                 }
                 val notesViewModel: NotesViewModel = viewModel {
                     NotesViewModel(noteRepository)
+                }
+                val learningViewModel: LearningViewModel = viewModel {
+                    LearningViewModel(learningRepository)
                 }
 
                 val uiState by authViewModel.uiState.collectAsState()
@@ -73,6 +78,7 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         authViewModel = authViewModel,
                         notesViewModel = notesViewModel,
+                        learningViewModel = learningViewModel,
                         modifier = Modifier.padding(innerPadding),
                         onDashboardScreen = {
                             DashboardPlaceholder(
@@ -84,6 +90,9 @@ class MainActivity : ComponentActivity() {
                                     } else {
                                         navController.navigate(Screen.HusbandNotes.route)
                                     }
+                                },
+                                onOpenLearning = {
+                                    navController.navigate(Screen.LearningCatalog.route)
                                 },
                                 onLogout = {
                                     authViewModel.logout()
@@ -104,6 +113,7 @@ class MainActivity : ComponentActivity() {
 fun DashboardPlaceholder(
     authViewModel: AuthViewModel,
     onOpenNotes: () -> Unit,
+    onOpenLearning: () -> Unit,
     onLogout: () -> Unit
 ) {
     val uiState by authViewModel.uiState.collectAsState()
@@ -174,6 +184,23 @@ fun DashboardPlaceholder(
         ) {
             Text(
                 text = if (user?.role == UserRole.ISTRI) "Buka Catatan Kehamilan (Diari)" else "Lihat Catatan Dari Istri",
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Button(
+            onClick = onOpenLearning,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E2E86))
+        ) {
+            Text(
+                text = "Buka Modul Belajar & Kuis",
                 color = Color.White,
                 fontWeight = FontWeight.Bold
             )

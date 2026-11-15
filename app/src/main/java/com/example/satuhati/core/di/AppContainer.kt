@@ -6,8 +6,10 @@ import com.example.satuhati.data.remote.service.FirebaseAuthService
 import com.example.satuhati.data.remote.service.FirestoreCoupleService
 import com.example.satuhati.data.remote.service.FirestoreNoteService
 import com.example.satuhati.data.repository.AuthRepositoryImpl
+import com.example.satuhati.data.repository.LearningRepositoryImpl
 import com.example.satuhati.data.repository.NoteRepositoryImpl
 import com.example.satuhati.domain.repository.IAuthRepository
+import com.example.satuhati.domain.repository.ILearningRepository
 import com.example.satuhati.domain.repository.INoteRepository
 
 class AppContainer(context: Context) {
@@ -40,6 +42,12 @@ class AppContainer(context: Context) {
         NoteRepositoryImpl(
             firestoreService = firestoreNoteService,
             noteDao = database.noteDao()
+        )
+    }
+
+    val learningRepository: ILearningRepository by lazy {
+        LearningRepositoryImpl(
+            learningDao = database.learningDao()
         )
     }
 }

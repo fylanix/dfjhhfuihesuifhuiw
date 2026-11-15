@@ -16,6 +16,11 @@ import com.example.satuhati.presentation.auth.LandingScreen
 import com.example.satuhati.presentation.auth.LoginScreen
 import com.example.satuhati.presentation.auth.RegisterScreen
 import com.example.satuhati.presentation.auth.ShowPairingCodeScreen
+import com.example.satuhati.presentation.learning.LearningCatalogScreen
+import com.example.satuhati.presentation.learning.LearningViewModel
+import com.example.satuhati.presentation.learning.ModuleDetailScreen
+import com.example.satuhati.presentation.learning.QuizResultScreen
+import com.example.satuhati.presentation.learning.QuizScreen
 import com.example.satuhati.presentation.notes.AddNoteScreen
 import com.example.satuhati.presentation.notes.HusbandNotesScreen
 import com.example.satuhati.presentation.notes.NotesViewModel
@@ -31,6 +36,10 @@ sealed class Screen(val route: String) {
     object WifeNotes : Screen("wife_notes")
     object AddNote : Screen("add_note")
     object HusbandNotes : Screen("husband_notes")
+    object LearningCatalog : Screen("learning_catalog")
+    object ModuleDetail : Screen("module_detail")
+    object Quiz : Screen("quiz")
+    object QuizResult : Screen("quiz_result")
 }
 
 @Composable
@@ -38,11 +47,13 @@ fun SatuHatiNavGraph(
     navController: NavHostController,
     authViewModel: AuthViewModel,
     notesViewModel: NotesViewModel,
+    learningViewModel: LearningViewModel,
     modifier: Modifier = Modifier,
     onDashboardScreen: @Composable () -> Unit
 ) {
     val uiState by authViewModel.uiState.collectAsState()
     val notesUiState by notesViewModel.uiState.collectAsState()
+    val learningUiState by learningViewModel.uiState.collectAsState()
 
     val startDestination = when {
         uiState.currentUser == null -> Screen.Landing.route
@@ -170,6 +181,65 @@ fun SatuHatiNavGraph(
                 onSendResponse = { noteId, response ->
                     uiState.currentUser?.coupleId?.let { cId ->
                         notesViewModel.respondToNote(cId, noteId, response)
+                    }
+                }
+            )
+        }
+
+        composable(Screen.LearningCatalog.route) {
+            LearningCatalogScreen(
+                modules = learningUiState.modules,
+                selectedTrimester = learningUiState.selectedTrimester,
+                userRole = uiState.currentUser?.role ?: UserRole.ISTRI,
+                onSelectTrimester = { trimester ->
+                    learningViewModel.selectTrimester(trimester)
+                },
+                onSelectModule = { module ->
+                    learningViewModel.selectModule(module)
+                    navController.navigate(Screen.ModuleDetail.route)
+                }
+            )
+        }
+
+        composable(Screen.ModuleDetail.route) {
+            ModuleDetailScreen(
+                module = learningUiState.selectedModule,
+                onStartQuiz = {
+                    learningViewModel.markCurrentModuleAsRead()
+                    navController.navigate(Screen.Quiz.route)
+                },
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.Quiz.route) {
+            QuizScreen(
+                uiState = learningUiState,
+                onSelectOption = { optIdx ->
+                    learningViewModel.selectQuizOption(optIdx)
+                },
+                onNextQuestion = {
+                    learningViewModel.nextQuestion()
+                },
+                onQuizCompleted = {
+                    navController.navigate(Screen.QuizResult.route) {
+                        popUpTo(Screen.Quiz.route) { inclusive = true }
+                    }
+                },
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.QuizResult.route) {
+            QuizResultScreen(
+                quizResult = learningUiState.quizResult,
+                onFinishClick = {
+                    navController.navigate(Screen.LearningCatalog.route) {
+                        popUpTo(Screen.LearningCatalog.route) { inclusive = true }
                     }
                 }
             )
