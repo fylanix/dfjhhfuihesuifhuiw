@@ -16,6 +16,7 @@ import com.example.satuhati.presentation.auth.LandingScreen
 import com.example.satuhati.presentation.auth.LoginScreen
 import com.example.satuhati.presentation.auth.RegisterScreen
 import com.example.satuhati.presentation.auth.ShowPairingCodeScreen
+import com.example.satuhati.presentation.home.HomeScreen
 import com.example.satuhati.presentation.learning.LearningCatalogScreen
 import com.example.satuhati.presentation.learning.LearningViewModel
 import com.example.satuhati.presentation.learning.ModuleDetailScreen
@@ -25,6 +26,7 @@ import com.example.satuhati.presentation.notes.AddNoteScreen
 import com.example.satuhati.presentation.notes.HusbandNotesScreen
 import com.example.satuhati.presentation.notes.NotesViewModel
 import com.example.satuhati.presentation.notes.WifeNotesScreen
+import com.example.satuhati.presentation.profile.AccountProfileScreen
 import com.example.satuhati.presentation.schedule.AddScheduleScreen
 import com.example.satuhati.presentation.schedule.AncTimelineScreen
 import com.example.satuhati.presentation.schedule.HusbandScheduleScreen
@@ -47,6 +49,7 @@ sealed class Screen(val route: String) {
     object AncTimeline : Screen("anc_timeline")
     object AddSchedule : Screen("add_schedule")
     object HusbandSchedule : Screen("husband_schedule")
+    object AccountProfile : Screen("account_profile")
 }
 
 @Composable
@@ -57,7 +60,7 @@ fun SatuHatiNavGraph(
     learningViewModel: LearningViewModel,
     scheduleViewModel: ScheduleViewModel,
     modifier: Modifier = Modifier,
-    onDashboardScreen: @Composable () -> Unit
+    onDashboardScreen: (@Composable () -> Unit)? = null
 ) {
     val uiState by authViewModel.uiState.collectAsState()
     val notesUiState by notesViewModel.uiState.collectAsState()
@@ -147,7 +150,46 @@ fun SatuHatiNavGraph(
         }
 
         composable(Screen.MainDashboard.route) {
-            onDashboardScreen()
+            HomeScreen(
+                currentUser = uiState.currentUser,
+                currentCouple = uiState.currentCouple,
+                onNavigateToNotes = {
+                    val isWife = uiState.currentUser?.role == UserRole.ISTRI
+                    if (isWife) {
+                        navController.navigate(Screen.WifeNotes.route)
+                    } else {
+                        navController.navigate(Screen.HusbandNotes.route)
+                    }
+                },
+                onNavigateToLearning = {
+                    navController.navigate(Screen.LearningCatalog.route)
+                },
+                onNavigateToSchedule = {
+                    navController.navigate(Screen.AncTimeline.route)
+                },
+                onNavigateToHusbandPrep = {
+                    val nextSchedule = scheduleUiState.schedules.firstOrNull()
+                    if (nextSchedule != null) {
+                        scheduleViewModel.selectSchedule(nextSchedule)
+                        navController.navigate(Screen.HusbandSchedule.route)
+                    } else {
+                        navController.navigate(Screen.AncTimeline.route)
+                    }
+                }
+            )
+        }
+
+        composable(Screen.AccountProfile.route) {
+            AccountProfileScreen(
+                user = uiState.currentUser,
+                couple = uiState.currentCouple,
+                onLogoutClick = {
+                    authViewModel.logout()
+                    navController.navigate(Screen.Landing.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
 
         composable(Screen.WifeNotes.route) {

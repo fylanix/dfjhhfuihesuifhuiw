@@ -28,9 +28,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.LaunchedEffect
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.satuhati.domain.model.UserRole
 import com.example.satuhati.presentation.auth.AuthViewModel
+import com.example.satuhati.presentation.common.BottomNavItem
+import com.example.satuhati.presentation.common.SatuHatiBottomNavBar
 import com.example.satuhati.presentation.learning.LearningViewModel
 import com.example.satuhati.presentation.navigation.SatuHatiNavGraph
 import com.example.satuhati.presentation.navigation.Screen
@@ -71,6 +74,8 @@ class MainActivity : ComponentActivity() {
                 }
 
                 val uiState by authViewModel.uiState.collectAsState()
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
 
                 LaunchedEffect(uiState.currentUser?.coupleId) {
                     uiState.currentUser?.coupleId?.let { cId ->
@@ -79,172 +84,66 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                val showBottomNav = currentRoute in listOf(
+                    Screen.MainDashboard.route,
+                    Screen.WifeNotes.route,
+                    Screen.HusbandNotes.route,
+                    Screen.LearningCatalog.route,
+                    Screen.AncTimeline.route,
+                    Screen.AccountProfile.route
+                )
+
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
+                        if (showBottomNav) {
+                            SatuHatiBottomNavBar(
+                                currentRoute = currentRoute,
+                                onNavigate = { navItem ->
+                                    val isWife = uiState.currentUser?.role == UserRole.ISTRI
+                                    when (navItem) {
+                                        BottomNavItem.HOME -> {
+                                            navController.navigate(Screen.MainDashboard.route) {
+                                                popUpTo(Screen.MainDashboard.route) { inclusive = true }
+                                            }
+                                        }
+                                        BottomNavItem.DIARY -> {
+                                            val target = if (isWife) Screen.WifeNotes.route else Screen.HusbandNotes.route
+                                            navController.navigate(target) {
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                        BottomNavItem.LEARNING -> {
+                                            navController.navigate(Screen.LearningCatalog.route) {
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                        BottomNavItem.SCHEDULE -> {
+                                            navController.navigate(Screen.AncTimeline.route) {
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                        BottomNavItem.PROFILE -> {
+                                            navController.navigate(Screen.AccountProfile.route) {
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                    }
+                ) { innerPadding ->
                     SatuHatiNavGraph(
                         navController = navController,
                         authViewModel = authViewModel,
                         notesViewModel = notesViewModel,
                         learningViewModel = learningViewModel,
                         scheduleViewModel = scheduleViewModel,
-                        modifier = Modifier.padding(innerPadding),
-                        onDashboardScreen = {
-                            DashboardPlaceholder(
-                                authViewModel = authViewModel,
-                                onOpenNotes = {
-                                    val isWife = uiState.currentUser?.role == UserRole.ISTRI
-                                    if (isWife) {
-                                        navController.navigate(Screen.WifeNotes.route)
-                                    } else {
-                                        navController.navigate(Screen.HusbandNotes.route)
-                                    }
-                                },
-                                onOpenLearning = {
-                                    navController.navigate(Screen.LearningCatalog.route)
-                                },
-                                onOpenSchedule = {
-                                    navController.navigate(Screen.AncTimeline.route)
-                                },
-                                onLogout = {
-                                    authViewModel.logout()
-                                    navController.navigate(Screen.Landing.route) {
-                                        popUpTo(0) { inclusive = true }
-                                    }
-                                }
-                            )
-                        }
+                        modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun DashboardPlaceholder(
-    authViewModel: AuthViewModel,
-    onOpenNotes: () -> Unit,
-    onOpenLearning: () -> Unit,
-    onOpenSchedule: () -> Unit,
-    onLogout: () -> Unit
-) {
-    val uiState by authViewModel.uiState.collectAsState()
-    val user = uiState.currentUser
-    val couple = uiState.currentCouple
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(ScreenBackground)
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "SATUHATI",
-            color = PrimaryBlue,
-            fontWeight = FontWeight.Bold,
-            fontSize = 24.sp
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFFEDF7F1), RoundedCornerShape(16.dp))
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "Akun Pasangan Terhubung!",
-                color = StatusSuccess,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
-            Text(
-                text = "Pengguna: ${user?.name ?: "-"} (${user?.role?.name ?: "-"})",
-                color = TextDark,
-                fontSize = 14.sp
-            )
-            Text(
-                text = "Istri: ${couple?.wifeName ?: "-"}",
-                color = TextMuted,
-                fontSize = 14.sp
-            )
-            Text(
-                text = "Suami: ${couple?.husbandName ?: "-"}",
-                color = TextMuted,
-                fontSize = 14.sp
-            )
-            Text(
-                text = "Kode Pairing: ${couple?.pairingCode ?: "-"}",
-                color = TextMuted,
-                fontSize = 14.sp
-            )
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Button(
-            onClick = onOpenNotes,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
-        ) {
-            Text(
-                text = if (user?.role == UserRole.ISTRI) "Buka Catatan Kehamilan (Diari)" else "Lihat Catatan Dari Istri",
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Button(
-            onClick = onOpenLearning,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E2E86))
-        ) {
-            Text(
-                text = "Buka Modul Belajar & Kuis",
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Button(
-            onClick = onOpenSchedule,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F766E))
-        ) {
-            Text(
-                text = "Jadwal Pemeriksaan ANC & Suami Siaga",
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Button(
-            onClick = onLogout,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64748B))
-        ) {
-            Text("Keluar (Logout)", color = Color.White, fontWeight = FontWeight.Bold)
         }
     }
 }
