@@ -1,6 +1,7 @@
 package com.example.satuhati.presentation.auth
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,10 +25,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.satuhati.R
 import com.example.satuhati.ui.theme.BorderNeutral
 import com.example.satuhati.ui.theme.PrimaryBlue
 import com.example.satuhati.ui.theme.PrimarySoftBlue
@@ -62,19 +66,26 @@ fun LandingScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
-                modifier = Modifier
-                    .size(240.dp)
-                    .background(PrimarySoftBlue, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Favorite,
-                    contentDescription = "SatuHati Love Icon",
-                    tint = PrimaryBlue,
-                    modifier = Modifier.size(96.dp)
-                )
-            }
+//            Box(
+//                modifier = Modifier
+//                    .size(240.dp)
+//                    .background(PrimarySoftBlue, CircleShape),
+//                contentAlignment = Alignment.Center
+//            ) {
+////                Icon(
+////                    imageVector = Icons.Default.Favorite,
+////                    contentDescription = "SatuHati Love Icon",
+////                    tint = PrimaryBlue,
+////                    modifier = Modifier.size(96.dp)
+////                )
+//
+//            }
+
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo SatuHati",
+                modifier = Modifier.size(240.dp)
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 

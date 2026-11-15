@@ -123,7 +123,9 @@ fun LearningCatalogScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(0.8f)
+                        ) {
                             Text(
                                 text = "Kurikulum Belajar",
                                 color = Color.White,

@@ -108,7 +108,9 @@ fun WifeNotesScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(0.8f)
+                        ) {
                             Text(
                                 text = "Catatan Kehamilan",
                                 color = Color.White,
