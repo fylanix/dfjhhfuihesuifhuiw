@@ -35,6 +35,7 @@ import com.example.satuhati.presentation.learning.LearningViewModel
 import com.example.satuhati.presentation.navigation.SatuHatiNavGraph
 import com.example.satuhati.presentation.navigation.Screen
 import com.example.satuhati.presentation.notes.NotesViewModel
+import com.example.satuhati.presentation.schedule.ScheduleViewModel
 import com.example.satuhati.ui.theme.PrimaryBlue
 import com.example.satuhati.ui.theme.SatuHatiTheme
 import com.example.satuhati.ui.theme.ScreenBackground
@@ -51,6 +52,7 @@ class MainActivity : ComponentActivity() {
         val authRepository = app.container.authRepository
         val noteRepository = app.container.noteRepository
         val learningRepository = app.container.learningRepository
+        val scheduleRepository = app.container.scheduleRepository
 
         setContent {
             SatuHatiTheme {
@@ -64,12 +66,16 @@ class MainActivity : ComponentActivity() {
                 val learningViewModel: LearningViewModel = viewModel {
                     LearningViewModel(learningRepository)
                 }
+                val scheduleViewModel: ScheduleViewModel = viewModel {
+                    ScheduleViewModel(scheduleRepository)
+                }
 
                 val uiState by authViewModel.uiState.collectAsState()
 
                 LaunchedEffect(uiState.currentUser?.coupleId) {
                     uiState.currentUser?.coupleId?.let { cId ->
                         notesViewModel.loadNotes(cId)
+                        scheduleViewModel.loadSchedules(cId)
                     }
                 }
 
@@ -79,6 +85,7 @@ class MainActivity : ComponentActivity() {
                         authViewModel = authViewModel,
                         notesViewModel = notesViewModel,
                         learningViewModel = learningViewModel,
+                        scheduleViewModel = scheduleViewModel,
                         modifier = Modifier.padding(innerPadding),
                         onDashboardScreen = {
                             DashboardPlaceholder(
@@ -93,6 +100,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onOpenLearning = {
                                     navController.navigate(Screen.LearningCatalog.route)
+                                },
+                                onOpenSchedule = {
+                                    navController.navigate(Screen.AncTimeline.route)
                                 },
                                 onLogout = {
                                     authViewModel.logout()
@@ -114,6 +124,7 @@ fun DashboardPlaceholder(
     authViewModel: AuthViewModel,
     onOpenNotes: () -> Unit,
     onOpenLearning: () -> Unit,
+    onOpenSchedule: () -> Unit,
     onLogout: () -> Unit
 ) {
     val uiState by authViewModel.uiState.collectAsState()
@@ -201,6 +212,23 @@ fun DashboardPlaceholder(
         ) {
             Text(
                 text = "Buka Modul Belajar & Kuis",
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Button(
+            onClick = onOpenSchedule,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F766E))
+        ) {
+            Text(
+                text = "Jadwal Pemeriksaan ANC & Suami Siaga",
                 color = Color.White,
                 fontWeight = FontWeight.Bold
             )

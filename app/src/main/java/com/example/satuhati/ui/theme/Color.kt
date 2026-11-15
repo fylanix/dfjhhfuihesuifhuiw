@@ -5,8 +5,10 @@ import androidx.compose.ui.graphics.Color
 // Primary Colors (SatuHati Figma Design)
 val PrimaryBlue = Color(0xFF3952E0)
 val PrimaryDarkNavy = Color(0xFF1E2E86)
+val DarkNavy = PrimaryDarkNavy
 val PrimaryHeaderDark = Color(0xFF1735C8)
 val PrimarySoftBlue = Color(0xFFE7EBFE)
+val SoftBlueTint = PrimarySoftBlue
 
 // Text and Neutral Colors
 val TextDark = Color(0xFF14213D)

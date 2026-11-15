@@ -7,7 +7,9 @@ import androidx.room.RoomDatabase
 import com.example.satuhati.data.local.dao.CoupleDao
 import com.example.satuhati.data.local.dao.LearningDao
 import com.example.satuhati.data.local.dao.NoteDao
+import com.example.satuhati.data.local.dao.ScheduleDao
 import com.example.satuhati.data.local.dao.UserDao
+import com.example.satuhati.data.local.entity.AncScheduleEntity
 import com.example.satuhati.data.local.entity.CoupleEntity
 import com.example.satuhati.data.local.entity.LearningModuleEntity
 import com.example.satuhati.data.local.entity.PregnancyNoteEntity
@@ -18,9 +20,10 @@ import com.example.satuhati.data.local.entity.UserEntity
         UserEntity::class,
         CoupleEntity::class,
         PregnancyNoteEntity::class,
-        LearningModuleEntity::class
+        LearningModuleEntity::class,
+        AncScheduleEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class SatuHatiDatabase : RoomDatabase() {
@@ -28,6 +31,7 @@ abstract class SatuHatiDatabase : RoomDatabase() {
     abstract fun coupleDao(): CoupleDao
     abstract fun noteDao(): NoteDao
     abstract fun learningDao(): LearningDao
+    abstract fun scheduleDao(): ScheduleDao
 
     companion object {
         @Volatile

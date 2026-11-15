@@ -25,6 +25,10 @@ import com.example.satuhati.presentation.notes.AddNoteScreen
 import com.example.satuhati.presentation.notes.HusbandNotesScreen
 import com.example.satuhati.presentation.notes.NotesViewModel
 import com.example.satuhati.presentation.notes.WifeNotesScreen
+import com.example.satuhati.presentation.schedule.AddScheduleScreen
+import com.example.satuhati.presentation.schedule.AncTimelineScreen
+import com.example.satuhati.presentation.schedule.HusbandScheduleScreen
+import com.example.satuhati.presentation.schedule.ScheduleViewModel
 
 sealed class Screen(val route: String) {
     object Landing : Screen("landing")
@@ -40,6 +44,9 @@ sealed class Screen(val route: String) {
     object ModuleDetail : Screen("module_detail")
     object Quiz : Screen("quiz")
     object QuizResult : Screen("quiz_result")
+    object AncTimeline : Screen("anc_timeline")
+    object AddSchedule : Screen("add_schedule")
+    object HusbandSchedule : Screen("husband_schedule")
 }
 
 @Composable
@@ -48,12 +55,14 @@ fun SatuHatiNavGraph(
     authViewModel: AuthViewModel,
     notesViewModel: NotesViewModel,
     learningViewModel: LearningViewModel,
+    scheduleViewModel: ScheduleViewModel,
     modifier: Modifier = Modifier,
     onDashboardScreen: @Composable () -> Unit
 ) {
     val uiState by authViewModel.uiState.collectAsState()
     val notesUiState by notesViewModel.uiState.collectAsState()
     val learningUiState by learningViewModel.uiState.collectAsState()
+    val scheduleUiState by scheduleViewModel.uiState.collectAsState()
 
     val startDestination = when {
         uiState.currentUser == null -> Screen.Landing.route
@@ -241,6 +250,50 @@ fun SatuHatiNavGraph(
                     navController.navigate(Screen.LearningCatalog.route) {
                         popUpTo(Screen.LearningCatalog.route) { inclusive = true }
                     }
+                }
+            )
+        }
+
+        composable(Screen.AncTimeline.route) {
+            AncTimelineScreen(
+                schedules = scheduleUiState.schedules,
+                userRole = uiState.currentUser?.role ?: UserRole.ISTRI,
+                onNavigateToAddSchedule = {
+                    scheduleViewModel.resetSavedState()
+                    navController.navigate(Screen.AddSchedule.route)
+                },
+                onNavigateToHusbandSchedule = { schedule ->
+                    scheduleViewModel.selectSchedule(schedule)
+                    navController.navigate(Screen.HusbandSchedule.route)
+                },
+                onToggleCompletion = { schedule ->
+                    scheduleViewModel.toggleCompletion(schedule)
+                }
+            )
+        }
+
+        composable(Screen.AddSchedule.route) {
+            AddScheduleScreen(
+                uiState = scheduleUiState,
+                coupleId = uiState.currentUser?.coupleId,
+                onSaveClick = { visitType, title, dateEpoch, location, doctor, notes ->
+                    val cId = uiState.currentUser?.coupleId ?: ""
+                    scheduleViewModel.addSchedule(cId, visitType, title, dateEpoch, location, doctor, notes)
+                },
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.HusbandSchedule.route) {
+            HusbandScheduleScreen(
+                schedule = scheduleUiState.selectedSchedule,
+                onToggleItem = { scheduleId, itemId, isChecked ->
+                    scheduleViewModel.toggleHusbandChecklist(scheduleId, itemId, isChecked)
+                },
+                onBackClick = {
+                    navController.popBackStack()
                 }
             )
         }

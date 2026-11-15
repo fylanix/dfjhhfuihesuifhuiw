@@ -5,12 +5,15 @@ import com.example.satuhati.data.local.SatuHatiDatabase
 import com.example.satuhati.data.remote.service.FirebaseAuthService
 import com.example.satuhati.data.remote.service.FirestoreCoupleService
 import com.example.satuhati.data.remote.service.FirestoreNoteService
+import com.example.satuhati.data.remote.service.FirestoreScheduleService
 import com.example.satuhati.data.repository.AuthRepositoryImpl
 import com.example.satuhati.data.repository.LearningRepositoryImpl
 import com.example.satuhati.data.repository.NoteRepositoryImpl
+import com.example.satuhati.data.repository.ScheduleRepositoryImpl
 import com.example.satuhati.domain.repository.IAuthRepository
 import com.example.satuhati.domain.repository.ILearningRepository
 import com.example.satuhati.domain.repository.INoteRepository
+import com.example.satuhati.domain.repository.IScheduleRepository
 
 class AppContainer(context: Context) {
     val database: SatuHatiDatabase by lazy {
@@ -27,6 +30,10 @@ class AppContainer(context: Context) {
 
     val firestoreNoteService: FirestoreNoteService by lazy {
         FirestoreNoteService()
+    }
+
+    val firestoreScheduleService: FirestoreScheduleService by lazy {
+        FirestoreScheduleService()
     }
 
     val authRepository: IAuthRepository by lazy {
@@ -48,6 +55,13 @@ class AppContainer(context: Context) {
     val learningRepository: ILearningRepository by lazy {
         LearningRepositoryImpl(
             learningDao = database.learningDao()
+        )
+    }
+
+    val scheduleRepository: IScheduleRepository by lazy {
+        ScheduleRepositoryImpl(
+            firestoreService = firestoreScheduleService,
+            scheduleDao = database.scheduleDao()
         )
     }
 }
