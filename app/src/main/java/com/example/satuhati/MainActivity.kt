@@ -27,10 +27,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.compose.rememberNavController
+import com.example.satuhati.domain.model.UserRole
 import com.example.satuhati.presentation.auth.AuthViewModel
 import com.example.satuhati.presentation.navigation.SatuHatiNavGraph
 import com.example.satuhati.presentation.navigation.Screen
+import com.example.satuhati.presentation.notes.NotesViewModel
 import com.example.satuhati.ui.theme.PrimaryBlue
 import com.example.satuhati.ui.theme.SatuHatiTheme
 import com.example.satuhati.ui.theme.ScreenBackground
@@ -45,6 +48,7 @@ class MainActivity : ComponentActivity() {
 
         val app = application as SatuHatiApp
         val authRepository = app.container.authRepository
+        val noteRepository = app.container.noteRepository
 
         setContent {
             SatuHatiTheme {
@@ -52,17 +56,35 @@ class MainActivity : ComponentActivity() {
                 val authViewModel: AuthViewModel = viewModel {
                     AuthViewModel(authRepository)
                 }
+                val notesViewModel: NotesViewModel = viewModel {
+                    NotesViewModel(noteRepository)
+                }
 
                 val uiState by authViewModel.uiState.collectAsState()
+
+                LaunchedEffect(uiState.currentUser?.coupleId) {
+                    uiState.currentUser?.coupleId?.let { cId ->
+                        notesViewModel.loadNotes(cId)
+                    }
+                }
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     SatuHatiNavGraph(
                         navController = navController,
                         authViewModel = authViewModel,
+                        notesViewModel = notesViewModel,
                         modifier = Modifier.padding(innerPadding),
                         onDashboardScreen = {
                             DashboardPlaceholder(
                                 authViewModel = authViewModel,
+                                onOpenNotes = {
+                                    val isWife = uiState.currentUser?.role == UserRole.ISTRI
+                                    if (isWife) {
+                                        navController.navigate(Screen.WifeNotes.route)
+                                    } else {
+                                        navController.navigate(Screen.HusbandNotes.route)
+                                    }
+                                },
                                 onLogout = {
                                     authViewModel.logout()
                                     navController.navigate(Screen.Landing.route) {
@@ -81,6 +103,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun DashboardPlaceholder(
     authViewModel: AuthViewModel,
+    onOpenNotes: () -> Unit,
     onLogout: () -> Unit
 ) {
     val uiState by authViewModel.uiState.collectAsState()
@@ -139,7 +162,24 @@ fun DashboardPlaceholder(
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Button(
+            onClick = onOpenNotes,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+        ) {
+            Text(
+                text = if (user?.role == UserRole.ISTRI) "Buka Catatan Kehamilan (Diari)" else "Lihat Catatan Dari Istri",
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         Button(
             onClick = onLogout,
@@ -147,7 +187,7 @@ fun DashboardPlaceholder(
                 .fillMaxWidth()
                 .height(52.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64748B))
         ) {
             Text("Keluar (Logout)", color = Color.White, fontWeight = FontWeight.Bold)
         }
